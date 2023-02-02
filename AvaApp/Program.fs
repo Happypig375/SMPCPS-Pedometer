@@ -23,7 +23,7 @@ type App() =
                 visualRoot.VisualRoot.Renderer.DrawFps <- true
                 visualRoot.VisualRoot.Renderer.DrawDirtyRects <- true
                         
-            Shell.program
+            Counter.program
             |> Program.withHost this
             |> Program.run
         match this.ApplicationLifetime with

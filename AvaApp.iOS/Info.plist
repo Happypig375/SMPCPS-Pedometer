@@ -3,9 +3,9 @@
 <plist version="1.0">
 <dict>
 	<key>CFBundleDisplayName</key>
-	<string>AvaAppCSharp</string>
+	<string>SMPCPS Pedometer</string>
 	<key>CFBundleIdentifier</key>
-	<string>companyName.AvaAppCSharp</string>
+	<string>smpcps.pedometer.community</string>
 	<key>CFBundleShortVersionString</key>
 	<string>1.0</string>
 	<key>CFBundleVersion</key>
@@ -43,5 +43,7 @@
 	<true/>
 	<key>UIViewControllerBasedStatusBarAppearance</key>
 	<false/>
+	<key>NSMotionUsageDescription</key>
+	<string>The pedometer needs to be accessed to track your steps.</string>
 </dict>
 </plist>

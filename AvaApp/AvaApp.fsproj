@@ -5,15 +5,26 @@
     </PropertyGroup>
 
     <ItemGroup>
+        <AvaloniaResource Include="Login.svg" />
+        <AvaloniaResource Include="iPad Pro 11_ - 1.svg" />
+        <AvaloniaResource Include="iPad Pro 11_ - 2.svg" />
+        <AvaloniaResource Include="iPad Pro 11_ - 3.svg" />
+        <AvaloniaResource Include="iPad Pro 11_ - 4.svg" />
+        <AvaloniaResource Include="iPad Pro 11_ - 5.svg" />
+		<AvaloniaResource Include="iPad Pro 11_ - 6.svg" />
+		<AvaloniaResource Include="iPad Pro 11_ - 7.svg" />
+		<AvaloniaResource Include="iPad Pro 11_ - 8.svg" />
+        <Compile Include="Svg.fs" />
         <Compile Include="Counter.fs" />
-        <Compile Include="About.fs" />
-        <Compile Include="Shell.fs" />
         <Compile Include="Program.fs" />
         <AvaloniaResource Include="**\*.xaml" />
     </ItemGroup>
 
+    <ItemGroup />
+
     <ItemGroup>
         <PackageReference Include="Avalonia" Version="$(AvaloniaVersion)" />
+        <PackageReference Include="Avalonia.Svg.Skia" Version="11.0.0-preview4" />
         <PackageReference Include="Avalonia.Themes.Fluent" Version="$(AvaloniaVersion)" />
         <PackageReference Condition="'$(Configuration)' == 'Debug'" Include="Avalonia.Diagnostics" Version="$(AvaloniaVersion)" />
     </ItemGroup>
