@@ -6,7 +6,7 @@ open Avalonia.Controls.ApplicationLifetimes
 open Avalonia.FuncUI
 open Avalonia.FuncUI.Elmish
 open Avalonia.FuncUI.Hosts
-open Avalonia.Themes.Fluent
+open Avalonia.Themes.Simple
 
 /// This is your application you can ose the initialize method to load styles
 /// or handle Life Cycle events of your application
@@ -14,8 +14,7 @@ type App() =
     inherit Application()
 
     override this.Initialize() =
-        this.Styles.Add (FluentTheme(baseUri = null, Mode = FluentThemeMode.Dark))
-        this.Styles.Load "avares://AvaApp/Styles.xaml"
+        this.Styles.Add (SimpleTheme(baseUri = null, Mode = SimpleThemeMode.Dark))
 
     override this.OnFrameworkInitializationCompleted() =
         let init(this: 'T when 'T :> Controls.ContentControl and 'T :> IViewHost) (visualRoot: Rendering.IRenderRoot) =

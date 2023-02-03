@@ -35,11 +35,13 @@ type MainActivity() =
     inherit AvaloniaMainActivity()
     let [<Literal>] activityRecognitionRequestCode = 1483743225
     override this.OnCreate(bundle: Bundle) =
+        base.OnCreate bundle
         for _ in 1 .. 3 do // In case of misclick, but don't infinite loop as some devices return denied when this permission is unsupported but actually allowed
             if AndroidX.Core.Content.ContextCompat.CheckSelfPermission(this,
                 Android.Manifest.Permission.ActivityRecognition) = Permission.Denied then
                 // Ask for permission
                 this.RequestPermissions([|Android.Manifest.Permission.ActivityRecognition|], activityRecognitionRequestCode)
-        AvaApp.Counter.pedometerInstance <- Some (PedometerAndroid())
     override this.OnRequestPermissionsResult(requestCode: int, permissions: string[], [<Android.Runtime.GeneratedEnum>] grantResults: Permission[]) =
         base.OnRequestPermissionsResult(requestCode, permissions, grantResults)
+        if requestCode = activityRecognitionRequestCode then
+            AvaApp.Counter.pedometerInstance <- Some (PedometerAndroid())
