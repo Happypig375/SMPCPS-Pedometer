@@ -30,18 +30,28 @@ type PedometerAndroid() =
         member _.IsSupported = sensor <> null
         member _.Step = event.Publish |> Event.map (fun steps -> steps, None)
 
+// Not Android.Hardware.Sensor.StringTypeStepCounter!
+// Available features: https://developer.android.com/guide/topics/manifest/uses-feature-element#features-reference
+[<UsesFeature("android.hardware.sensor.stepcounter", Required = true)>]
+[<UsesPermission(Android.Manifest.Permission.ActivityRecognition)>]
+do ()
+
+// These information appear in the task list
 [<Activity(Label = "SMPCPS Pedometer", Theme = "@style/MyTheme.NoActionBar", Icon = "@drawable/icon", LaunchMode = LaunchMode.SingleInstance, ConfigurationChanges = (ConfigChanges.Orientation ||| ConfigChanges.ScreenSize))>]
 type MainActivity() =
     inherit AvaloniaMainActivity()
     let [<Literal>] activityRecognitionRequestCode = 1483743225
     override this.OnCreate(bundle: Bundle) =
         base.OnCreate bundle
-        for _ in 1 .. 3 do // In case of misclick, but don't infinite loop as some devices return denied when this permission is unsupported but actually allowed
-            if AndroidX.Core.Content.ContextCompat.CheckSelfPermission(this,
-                Android.Manifest.Permission.ActivityRecognition) = Permission.Denied then
-                // Ask for permission
-                this.RequestPermissions([|Android.Manifest.Permission.ActivityRecognition|], activityRecognitionRequestCode)
+        if AndroidX.Core.Content.ContextCompat.CheckSelfPermission(this,
+            Android.Manifest.Permission.ActivityRecognition) = Permission.Denied then // Some devices return denied when this permission is unsupported but actually allowed
+            // Ask for permission
+            this.RequestPermissions([|Android.Manifest.Permission.ActivityRecognition|], activityRecognitionRequestCode)
+        AvaApp.Counter.setPedometer <| PedometerAndroid()
     override this.OnRequestPermissionsResult(requestCode: int, permissions: string[], [<Android.Runtime.GeneratedEnum>] grantResults: Permission[]) =
         base.OnRequestPermissionsResult(requestCode, permissions, grantResults)
         if requestCode = activityRecognitionRequestCode then
-            AvaApp.Counter.pedometerInstance <- Some (PedometerAndroid())
+            if grantResults[0] = Permission.Denied then
+                // Ask for permission
+                this.RequestPermissions([|Android.Manifest.Permission.ActivityRecognition|], activityRecognitionRequestCode)
+            else AvaApp.Counter.setPedometer <| PedometerAndroid()

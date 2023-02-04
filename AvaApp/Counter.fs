@@ -16,6 +16,12 @@ module Counter =
     open Avalonia.FuncUI
     open Avalonia.FuncUI.Elmish
     
+    let mutable private pedometer: Pedometer option = None
+    let private pedometerSetted = Event<_>()
+    let setPedometer p =
+        pedometer <- Some p
+        pedometerSetted.Trigger p
+
     let fileName = Path.Combine(Environment.GetFolderPath Environment.SpecialFolder.LocalApplicationData, "smpcps_pedometer_progress")
     type Page = LoggedOut | LoggedIn | Menu of confirmSignOut:bool
     type State =
@@ -26,10 +32,9 @@ module Counter =
         using (System.IO.File.Open(fileName, IO.FileMode.OpenOrCreate)) ignore
         match FSharpPlus.Parsing.trySscanf "%d %g %s" (System.IO.File.ReadAllText fileName) with
         | Some (steps, distance, name) ->
-            { previous_progress = steps, distance * 1.<m>; name = name; current_tracker = 0, 0.<m>; page = LoggedIn; pedometer = None }
+            { previous_progress = steps, distance * 1.<m>; name = name; current_tracker = 0, 0.<m>; page = LoggedIn; pedometer = pedometer }
         | None ->
-            { previous_progress = 0, 0.<m>; name = ""; current_tracker = 0, 0.<m>; page = LoggedOut; pedometer = None }
-
+            { previous_progress = 0, 0.<m>; name = ""; current_tracker = 0, 0.<m>; page = LoggedOut; pedometer = pedometer }
 
     type Msg =
     | UpdateName of string
@@ -42,6 +47,7 @@ module Counter =
     | SetPedometer of Pedometer
 
     let update (msg: Msg) (state: State) =
+        printfn $"Update - {msg}"
         match msg with
         | UpdateName name -> { state with name = name }
         | LogIn ->
@@ -275,13 +281,12 @@ module Counter =
                                 TextBox.text state.name
                                 TextBox.onTextChanged (UpdateName >> dispatch)
                                 TextBox.fontSize 30
-                                TextBox.background "transparent"
                                 TextBox.left 333
                                 TextBox.top 580
                                 TextBox.width 421
                                 TextBox.height 65
-                                TextBox.background "white"
                                 TextBox.watermark "Enter your name here"
+                                TextBox.background "white"
                                 TextBox.verticalContentAlignment VerticalAlignment.Center
                                 TextBox.foreground "black"
                             ]
@@ -299,4 +304,4 @@ module Counter =
         ]
     
     let program = Program.mkProgram (fun () -> init, Cmd.ofEffect (fun dispatch ->
-        match pedometerInstance with Some p ->  | None -> ())) update view
+        pedometerSetted.Publish.Add <| fun p -> dispatch (SetPedometer p))) update view

@@ -4,7 +4,8 @@ open Android.Content
 open Avalonia.Android
 type Application = Android.App.Application
 
-[<Activity(Theme = "@style/MyTheme.Splash", MainLauncher = true, NoHistory = true)>]
+// These information appear in the home screen
+[<Activity(Label = "SMPCPS Pedometer", Theme = "@style/MyTheme.Splash", MainLauncher = true, NoHistory = true)>]
 type SplashActivity() =
     inherit AvaloniaSplashActivity<AvaApp.App>()
     override this.CustomizeAppBuilder builder =

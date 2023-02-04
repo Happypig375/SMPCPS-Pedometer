@@ -14,14 +14,10 @@ type App() =
     inherit Application()
 
     override this.Initialize() =
-        this.Styles.Add (SimpleTheme(baseUri = null, Mode = SimpleThemeMode.Dark))
+        this.Styles.Add (SimpleTheme())
 
     override this.OnFrameworkInitializationCompleted() =
         let init(this: 'T when 'T :> Controls.ContentControl and 'T :> IViewHost) (visualRoot: Rendering.IRenderRoot) =
-            if false then
-                visualRoot.VisualRoot.Renderer.DrawFps <- true
-                visualRoot.VisualRoot.Renderer.DrawDirtyRects <- true
-                        
             Counter.program
             |> Program.withHost this
             |> Program.run
