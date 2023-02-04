@@ -3,16 +3,25 @@ open Foundation
 open FSharp.Data.UnitSystems.SI.UnitSymbols
 open System
 
+type Pedometer = CoreMotion.CMPedometer
 type PedometeriOS() =
     let pedometer = new CoreMotion.CMPedometer()
     let event = Event<int * float<m> option>()
     // steps from midnight
     do
-        if CoreMotion.CMPedometer.IsStepCountingAvailable then
+        if Pedometer.IsStepCountingAvailable then
             pedometer.StartPedometerUpdates(NSDate.Now, // Data since now
-                Action<_, _>(fun data _ -> event.Trigger(data.NumberOfSteps.Int32Value, data.Distance(*in meters*).DoubleValue * 1.<m> |> Some)))
+                Action<_, _>(fun data _ ->
+                    event.Trigger(
+                        data.NumberOfSteps.Int32Value,
+                        if Pedometer.IsDistanceAvailable then
+                            data.Distance(*in meters*).DoubleValue * 1.<m> |> Some
+                        else None
+                    )
+                )
+            )
     interface AvaApp.Pedometer with
-        member _.IsSupported = CoreMotion.CMPedometer.IsStepCountingAvailable
+        member _.IsSupported = Pedometer.IsStepCountingAvailable
         member _.Step = event.Publish
 
 // This is the main entry point of the application.

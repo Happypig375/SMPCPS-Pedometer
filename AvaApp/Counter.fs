@@ -24,17 +24,33 @@ module Counter =
 
     let fileName = Path.Combine(Environment.GetFolderPath Environment.SpecialFolder.LocalApplicationData, "smpcps_pedometer_progress")
     type Page = LoggedOut | LoggedIn | Menu of confirmSignOut:bool
-    type State =
-        { previous_progress: int * double<m>; name: string; current_tracker: int * double<m>; page:Page; pedometer: Pedometer option }
-        member t.total_steps = fst t.previous_progress + fst t.current_tracker
-        member t.total_distance = snd t.previous_progress + snd t.current_tracker
+    type StepsAndDistance = int * double<m>
+    type State = {
+        previous_progress: StepsAndDistance
+        current_origin: StepsAndDistance option // Tracking the origin should be done in app logic instead of platform code because we reset steps when log off (new origin)
+        current_tracker: StepsAndDistance
+        name: string
+        page:Page
+    } with
+        member t.total_steps = fst t.previous_progress + fst t.current_tracker - Option.defaultValue 0 (Option.map fst t.current_origin)
+        member t.total_distance = snd t.previous_progress + snd t.current_tracker - Option.defaultValue 0.<m> (Option.map snd t.current_origin)
     let init =
         using (System.IO.File.Open(fileName, IO.FileMode.OpenOrCreate)) ignore
         match FSharpPlus.Parsing.trySscanf "%d %g %s" (System.IO.File.ReadAllText fileName) with
-        | Some (steps, distance, name) ->
-            { previous_progress = steps, distance * 1.<m>; name = name; current_tracker = 0, 0.<m>; page = LoggedIn; pedometer = pedometer }
-        | None ->
-            { previous_progress = 0, 0.<m>; name = ""; current_tracker = 0, 0.<m>; page = LoggedOut; pedometer = pedometer }
+        | Some (steps, distance, name) -> {
+                previous_progress = steps, distance * 1.<m>
+                current_origin = None
+                current_tracker = 0, 0.<m>
+                name = name
+                page = LoggedIn
+            }
+        | None -> {
+                previous_progress = 0, 0.<m>
+                current_origin = None
+                current_tracker = 0, 0.<m>
+                name = ""
+                page = LoggedOut
+            }
 
     type Msg =
     | UpdateName of string
@@ -44,10 +60,8 @@ module Counter =
     | CloseMenu
     | SignOut
     | SignOutConfirm
-    | SetPedometer of Pedometer
 
     let update (msg: Msg) (state: State) =
-        printfn $"Update - {msg}"
         match msg with
         | UpdateName name -> { state with name = name }
         | LogIn ->
@@ -55,16 +69,27 @@ module Counter =
             { state with page = LoggedIn }
         | CloseMenu -> { state with page = LoggedIn }
         | CurrentTrackerUpdate (steps, distance) ->
-            let prev_steps, prev_distance = state.previous_progress
-            let distance = match distance with Some distance -> distance | None -> float steps * 0.78<m>
-            File.WriteAllText(fileName, $"%d{prev_steps + steps} %g{prev_distance + distance} %s{state.name}")
-            { state with current_tracker = steps, distance }
+            // https://www.lewisgavin.co.uk/Step-Tracker-Android/
+            // Let's assume woman average of 70cm.
+            let distance = defaultArg distance (float steps * 0.70<m>)
+            match state.current_origin with
+            | None ->
+                { state with current_origin = Some (steps, distance); current_tracker = steps, distance }
+            | Some (origin_steps, origin_distance) ->
+                let prev_steps, prev_distance = state.previous_progress
+                File.WriteAllText(fileName, $"%d{prev_steps + steps - origin_steps} %g{prev_distance + distance - origin_distance} %s{state.name}")
+                { state with current_tracker = steps, distance }
         | OpenMenu -> { state with page = Menu false }
         | SignOut -> { state with page = Menu true }
         | SignOutConfirm ->
             File.Delete fileName
-            { previous_progress = 0, 0.<m>; name = ""; current_tracker = 0, 0.<m>; page = LoggedOut; pedometer = state.pedometer }
-        | SetPedometer pedometer -> { state with pedometer = Some pedometer }
+            {
+                previous_progress = 0, 0.<m>
+                current_origin = None
+                current_tracker = 0, 0.<m>
+                name = ""
+                page = LoggedOut
+            }
         , Cmd.none
     let view (state: State) (dispatch) =
         Viewbox.create [
@@ -208,8 +233,9 @@ module Counter =
                                     ContentControl.horizontalContentAlignment HorizontalAlignment.Center
                                 ] :> Types.IView else fun x -> x
                             TextBlock.create [
-                                TextBlock.left 70
+                                TextBlock.left (70.-30.)
                                 TextBlock.top 1005
+                                TextBlock.minWidth (330.+30.)
                                 TextBlock.text $"%d{state.total_steps}"
                                 TextBlock.fontSize 85
                                 if completed then
@@ -218,12 +244,12 @@ module Counter =
                                 else
                                     TextBlock.foreground "#ABECB1"
                                     TextBlock.background "#48A346"
-                                TextBlock.minWidth 330
                             ]
                             TextBlock.create [
-                                TextBlock.left 510
+                                TextBlock.left (510.-30.)
                                 TextBlock.top 1005
-                                TextBlock.text $"%d{int<double<m>> state.total_distance / 1000} / 21"
+                                TextBlock.minWidth (300.+30.)
+                                TextBlock.text $"%.1f{state.total_distance / 1000.} / 21"
                                 TextBlock.fontSize 85
                                 if completed then
                                     TextBlock.foreground "#FFC1DB"
@@ -231,8 +257,7 @@ module Counter =
                                 else
                                     TextBlock.foreground "#ABECB1"
                                     TextBlock.background "#48A346"
-                                TextBlock.minWidth 300
-                            ]
+                            ](*
                             Button.create [
                                 Button.content "Test step"
                                 Button.onClick (fun _ ->
@@ -244,7 +269,7 @@ module Counter =
                                 Button.width 100
                                 Button.height 100
                                 Button.background "transparent"
-                            ]
+                            ]*)
                         | LoggedOut ->
                             Rectangle.create [
                                 Rectangle.left -1e9
@@ -303,5 +328,9 @@ module Counter =
             )
         ]
     
-    let program = Program.mkProgram (fun () -> init, Cmd.ofEffect (fun dispatch ->
-        pedometerSetted.Publish.Add <| fun p -> dispatch (SetPedometer p))) update view
+    let program =
+        Program.mkProgram (fun () -> init, Cmd.ofEffect (fun dispatch ->
+            let listenToPedometer (p: Pedometer) = CurrentTrackerUpdate >> dispatch |> p.Step.Add
+            pedometerSetted.Publish.Add listenToPedometer
+            Option.iter listenToPedometer pedometer
+        )) update view
