@@ -103,18 +103,25 @@ module Counter =
                         match state.page with
                         | Menu confirmSignOut ->
                             Rectangle.create [
-                                Rectangle.left -1e9
-                                Rectangle.top -1e9
-                                Rectangle.width 2e9
-                                Rectangle.height 2e9
+                                Rectangle.left -1e6
+                                Rectangle.top -1e6
+                                Rectangle.width 2e6
+                                Rectangle.height 2e6
                                 Rectangle.fill "#2B2B2B"
                             ]
                             Rectangle.create [
-                                Rectangle.left -1e9
+                                Rectangle.left -1e6
                                 Rectangle.top 137
-                                Rectangle.width 2e9
+                                Rectangle.width 2e6
                                 Rectangle.height 57
                                 Rectangle.fill "#48A346"
+                            ]
+                            Rectangle.create [
+                                Rectangle.left -1e6
+                                Rectangle.top 194
+                                Rectangle.width 2e6
+                                Rectangle.height 940
+                                Rectangle.fill "#404040"
                             ]
                             Svg.create [
                                 Svg.path (if confirmSignOut then "iPad Pro 11_ - 8.svg" else "iPad Pro 11_ - 7.svg")
@@ -156,38 +163,38 @@ module Counter =
                         | LoggedIn ->
                             let completed = state.total_distance >= 21000.<m>
                             Rectangle.create [
-                                Rectangle.left -1e9
+                                Rectangle.left -1e6
                                 Rectangle.bottom <| 1194. - 137.
-                                Rectangle.width 2e9
-                                Rectangle.height 2e9
+                                Rectangle.width 2e6
+                                Rectangle.height 2e6
                                 Rectangle.fill "#2B2B2B"
                             ]
                             Rectangle.create [
-                                Rectangle.left -1e9
-                                Rectangle.top 137
-                                Rectangle.width 2e9
-                                Rectangle.height 57
-                                Rectangle.fill (if completed then "#EF2D8A" else "#48A346")
-                            ]
-                            Rectangle.create [
-                                Rectangle.left -1e9
+                                Rectangle.left -1e6
                                 Rectangle.top 190
-                                Rectangle.width 2e9
+                                Rectangle.width 2e6
                                 Rectangle.height 706
                                 Rectangle.fill (if completed then "white" else "#F2BF3C")
                             ]
                             Rectangle.create [
-                                Rectangle.left -1e9
+                                Rectangle.left -1e6
+                                Rectangle.top 137
+                                Rectangle.width 2e6
+                                Rectangle.height 57
+                                Rectangle.fill (if completed then "#EF2D8A" else "#48A346")
+                            ]
+                            Rectangle.create [
+                                Rectangle.left -1e6
                                 Rectangle.top 896
-                                Rectangle.width 2e9
+                                Rectangle.width 2e6
                                 Rectangle.height 241
                                 Rectangle.fill (if completed then "#EF2D8A" else "#48A346")
                             ]
                             Rectangle.create [
-                                Rectangle.left -1e9
+                                Rectangle.left -1e6
                                 Rectangle.top 1134
-                                Rectangle.width 2e9
-                                Rectangle.height 2e9
+                                Rectangle.width 2e6
+                                Rectangle.height 2e6
                                 Rectangle.fill "#2B2B2B"
                             ]
                             Svg.create [
@@ -208,30 +215,29 @@ module Counter =
                                 Button.onClick (fun _ -> dispatch OpenMenu)
                                 Button.background "transparent"
                             ]
-                            TextBlock.create [
-                                if completed then
-                                    TextBlock.foreground "#FFC1DB"
-                                    TextBlock.background "#EF2D8A"
-                                    TextBlock.textAlignment Media.TextAlignment.Center
-                                else
-                                    TextBlock.foreground "#ABECB1"
-                                    TextBlock.background "#48A346"
-                                    TextBlock.left 400
-                                    TextBlock.top 140
-                                TextBlock.text state.name
-                                TextBlock.fontSize 40
-                                TextBlock.minWidth 250
+                            ContentControl.create [
+                                ContentControl.clipToBounds false
+                                ContentControl.left 0
+                                ContentControl.top 137
+                                ContentControl.width 834
+                                ContentControl.height 57
+                                ContentControl.horizontalContentAlignment HorizontalAlignment.Center
+                                ContentControl.content (
+                                    TextBlock.create [
+                                        if completed then
+                                            TextBlock.foreground "#FFC1DB"
+                                            TextBlock.background "#EF2D8A"
+                                            TextBlock.text state.name
+                                        else
+                                            TextBlock.foreground "#ABECB1"
+                                            TextBlock.background "#48A346"
+                                            TextBlock.text $"Welcome, %s{state.name}"
+                                        TextBlock.textAlignment Media.TextAlignment.Center
+                                        TextBlock.fontSize 40
+                                        TextBlock.minWidth 450
+                                    ]
+                                )
                             ]
-                            |> if completed then fun x ->
-                                ContentControl.create [
-                                    ContentControl.clipToBounds false
-                                    ContentControl.left 0
-                                    ContentControl.top 140
-                                    ContentControl.width 834
-                                    ContentControl.height 57
-                                    ContentControl.content x
-                                    ContentControl.horizontalContentAlignment HorizontalAlignment.Center
-                                ] :> Types.IView else fun x -> x
                             TextBlock.create [
                                 TextBlock.left (70.-30.)
                                 TextBlock.top 1005
@@ -257,7 +263,7 @@ module Counter =
                                 else
                                     TextBlock.foreground "#ABECB1"
                                     TextBlock.background "#48A346"
-                            ](*
+                            ]
                             Button.create [
                                 Button.content "Test step"
                                 Button.onClick (fun _ ->
@@ -269,34 +275,34 @@ module Counter =
                                 Button.width 100
                                 Button.height 100
                                 Button.background "transparent"
-                            ]*)
+                            ]
                         | LoggedOut ->
                             Rectangle.create [
-                                Rectangle.left -1e9
+                                Rectangle.left -1e6
                                 Rectangle.bottom <| 1194. - 322.
-                                Rectangle.width 2e9
-                                Rectangle.height 2e9
+                                Rectangle.width 2e6
+                                Rectangle.height 2e6
                                 Rectangle.fill "#2B2B2B"
                             ]
                             Rectangle.create [
-                                Rectangle.left -1e9
-                                Rectangle.top 322
-                                Rectangle.width 2e9
-                                Rectangle.height 127
-                                Rectangle.fill "#48A346"
-                            ]
-                            Rectangle.create [
-                                Rectangle.left -1e9
+                                Rectangle.left -1e6
                                 Rectangle.top 446
-                                Rectangle.width 2e9
+                                Rectangle.width 2e6
                                 Rectangle.height 688
                                 Rectangle.fill "#F2BF3C"
                             ]
                             Rectangle.create [
-                                Rectangle.left -1e9
+                                Rectangle.left -1e6
+                                Rectangle.top 322
+                                Rectangle.width 2e6
+                                Rectangle.height 127
+                                Rectangle.fill "#48A346"
+                            ]
+                            Rectangle.create [
+                                Rectangle.left -1e6
                                 Rectangle.top 1134
-                                Rectangle.width 2e9
-                                Rectangle.height 2e9
+                                Rectangle.width 2e6
+                                Rectangle.height 2e6
                                 Rectangle.fill "#48A346"
                             ]
                             Svg.create [
