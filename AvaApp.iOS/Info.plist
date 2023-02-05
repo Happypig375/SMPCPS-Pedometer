@@ -45,5 +45,7 @@
 	<false/>
 	<key>NSMotionUsageDescription</key>
 	<string>The pedometer needs to be accessed to track your steps.</string>
+	<key>XSAppIconAssets</key>
+	<string>Media.xcassets/AppIcon.appiconset</string>
 </dict>
 </plist>

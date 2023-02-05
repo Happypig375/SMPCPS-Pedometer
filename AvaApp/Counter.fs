@@ -23,7 +23,8 @@ module Counter =
         pedometerSetted.Trigger p
 
     let fileName = Path.Combine(Environment.GetFolderPath Environment.SpecialFolder.LocalApplicationData, "smpcps_pedometer_progress")
-    type Page = LoggedOut | LoggedIn | Menu of confirmSignOut:bool
+    type MenuPage = MainMenu | ConfirmSignOut | AboutUs
+    type Page = LoggedOut | LoggedIn | Menu of MenuPage
     type StepsAndDistance = int * double<m>
     type State = {
         previous_progress: StepsAndDistance
@@ -60,6 +61,9 @@ module Counter =
     | CloseMenu
     | SignOut
     | SignOutConfirm
+    | About
+    | PrivacyPolicy
+    | ContactUs
 
     let update (msg: Msg) (state: State) =
         match msg with
@@ -79,8 +83,8 @@ module Counter =
                 let prev_steps, prev_distance = state.previous_progress
                 File.WriteAllText(fileName, $"%d{prev_steps + steps - origin_steps} %g{prev_distance + distance - origin_distance} %s{state.name}")
                 { state with current_tracker = steps, distance }
-        | OpenMenu -> { state with page = Menu false }
-        | SignOut -> { state with page = Menu true }
+        | OpenMenu -> { state with page = Menu MainMenu }
+        | SignOut -> { state with page = Menu ConfirmSignOut }
         | SignOutConfirm ->
             File.Delete fileName
             {
@@ -90,6 +94,14 @@ module Counter =
                 name = ""
                 page = LoggedOut
             }
+        | About ->
+            { state with page = Menu AboutUs }
+        | PrivacyPolicy ->
+            Microsoft.Maui.ApplicationModel.Browser.OpenAsync "https://www.ictinpe.org/pp-diyapp" |> ignore
+            state
+        | ContactUs ->
+            Microsoft.Maui.ApplicationModel.Browser.OpenAsync "https://www.ictinpe.org/contact-us" |> ignore
+            state
         , Cmd.none
     let view (state: State) (dispatch) =
         Viewbox.create [
@@ -101,7 +113,7 @@ module Counter =
                     Canvas.height 1194
                     Canvas.children [
                         match state.page with
-                        | Menu confirmSignOut ->
+                        | Menu menuPage ->
                             Rectangle.create [
                                 Rectangle.left -1e6
                                 Rectangle.top -1e6
@@ -124,9 +136,41 @@ module Counter =
                                 Rectangle.fill "#404040"
                             ]
                             Svg.create [
-                                Svg.path (if confirmSignOut then "iPad Pro 11_ - 8.svg" else "iPad Pro 11_ - 7.svg")
+                                Svg.path (if menuPage <> MainMenu then "iPad Pro 11_ - 8.svg" else "iPad Pro 11_ - 7.svg")
                             ]
-                            if confirmSignOut then
+                            match menuPage with
+                            | AboutUs ->
+                                ContentControl.create [
+                                    ContentControl.content (
+                                        TextBlock.create [
+                                            TextBlock.text "Sau Mau Ping Catholic Primary School"
+                                            TextBlock.textAlignment Media.TextAlignment.Center
+                                            TextBlock.textWrapping Media.TextWrapping.Wrap
+                                            TextBlock.fontSize 40
+                                            TextBlock.foreground "#323232"
+                                        ]
+                                    )
+                                    ContentControl.horizontalContentAlignment HorizontalAlignment.Center
+                                    ContentControl.verticalContentAlignment VerticalAlignment.Center
+                                    ContentControl.background "#D9D9D9"
+                                    ContentControl.left 140
+                                    ContentControl.top 395
+                                    ContentControl.width 550
+                                    ContentControl.height 300
+                                ]
+                                Button.create [
+                                    Button.left 158
+                                    Button.top 720
+                                    Button.width 530
+                                    Button.height 90
+                                    Button.cornerRadius 12
+                                    Button.background "#4E4E4E"
+                                    Button.foreground "white"
+                                    Button.content "Okay"
+                                    Button.fontSize 40
+                                    Button.onClick (fun _ -> dispatch OpenMenu)
+                                ]
+                            | ConfirmSignOut ->
                                 Button.create [
                                     Button.left 158
                                     Button.top 720
@@ -143,13 +187,37 @@ module Counter =
                                     Button.onClick (fun _ -> dispatch SignOutConfirm)
                                     Button.background "transparent"
                                 ]
-                            else
+                            | MainMenu ->
                                 Button.create [
                                     Button.left 20
                                     Button.top 20
                                     Button.width 110
                                     Button.height 110
                                     Button.onClick (fun _ -> dispatch CloseMenu)
+                                    Button.background "transparent"
+                                ]
+                                Button.create [
+                                    Button.left 50
+                                    Button.top 340
+                                    Button.width 700
+                                    Button.height 90
+                                    Button.onClick (fun _ -> dispatch About)
+                                    Button.background "transparent"
+                                ]
+                                Button.create [
+                                    Button.left 50
+                                    Button.top 480
+                                    Button.width 700
+                                    Button.height 90
+                                    Button.onClick (fun _ -> dispatch PrivacyPolicy)
+                                    Button.background "transparent"
+                                ]
+                                Button.create [
+                                    Button.left 50
+                                    Button.top 620
+                                    Button.width 700
+                                    Button.height 90
+                                    Button.onClick (fun _ -> dispatch ContactUs)
                                     Button.background "transparent"
                                 ]
                                 Button.create [
@@ -222,6 +290,7 @@ module Counter =
                                 ContentControl.width 834
                                 ContentControl.height 57
                                 ContentControl.horizontalContentAlignment HorizontalAlignment.Center
+                                ContentControl.verticalContentAlignment VerticalAlignment.Center
                                 ContentControl.content (
                                     TextBlock.create [
                                         if completed then
@@ -255,7 +324,8 @@ module Counter =
                                 TextBlock.left (510.-30.)
                                 TextBlock.top 1005
                                 TextBlock.minWidth (300.+30.)
-                                TextBlock.text $"%.1f{state.total_distance / 1000.} / 21"
+                                let km, m = System.Math.DivRem(int<double<m>> state.total_distance, 1000)
+                                TextBlock.text $"%d{km}.%d{m / 100} / 21"
                                 TextBlock.fontSize 85
                                 if completed then
                                     TextBlock.foreground "#FFC1DB"
@@ -264,18 +334,29 @@ module Counter =
                                     TextBlock.foreground "#ABECB1"
                                     TextBlock.background "#48A346"
                             ]
-                            Button.create [
-                                Button.content "Test step"
-                                Button.onClick (fun _ ->
-                                    let steps, distance = state.current_tracker
-                                    CurrentTrackerUpdate(steps + 300, None) |> dispatch
-                                , SubPatchOptions.OnChangeOf state.current_tracker)
-                                Button.top 200
-                                Button.left 100
-                                Button.width 100
-                                Button.height 100
-                                Button.background "transparent"
-                            ]
+                            match pedometer with
+                            | Some p when p.IsSupported -> ()
+                            | _ -> 
+                                TextBlock.create [
+                                    TextBlock.text "計步器未能使用！請檢查權限。\nPedometer unavailable! Check permissions."
+                                    TextBlock.foreground "red"
+                                    TextBlock.left 20
+                                    TextBlock.top 1000
+                                    TextBlock.fontSize 40
+                                    TextBlock.background "#80FFFFFF"
+                                ]
+                            //Button.create [
+                            //    Button.content "Test step"
+                            //    Button.onClick (fun _ ->
+                            //        let steps, distance = state.current_tracker
+                            //        CurrentTrackerUpdate(steps + 300, None) |> dispatch
+                            //    , SubPatchOptions.OnChangeOf state.current_tracker)
+                            //    Button.top 200
+                            //    Button.left 100
+                            //    Button.width 100
+                            //    Button.height 100
+                            //    Button.background "transparent"
+                            //]
                         | LoggedOut ->
                             Rectangle.create [
                                 Rectangle.left -1e6
@@ -320,6 +401,7 @@ module Counter =
                                 TextBox.background "white"
                                 TextBox.verticalContentAlignment VerticalAlignment.Center
                                 TextBox.foreground "black"
+                                TextBox.contentType Input.TextInput.TextInputContentType.Password
                             ]
                             Button.create [
                                 Button.left 372

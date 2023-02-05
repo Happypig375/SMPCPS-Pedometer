@@ -47,7 +47,4 @@ type MainActivity() =
     override this.OnRequestPermissionsResult(requestCode: int, permissions: string[], [<Android.Runtime.GeneratedEnum>] grantResults: Permission[]) =
         base.OnRequestPermissionsResult(requestCode, permissions, grantResults)
         if requestCode = activityRecognitionRequestCode then
-            if grantResults[0] = Permission.Denied then
-                // Ask for permission again in case of misclick
-                this.RequestPermissions([|Android.Manifest.Permission.ActivityRecognition|], activityRecognitionRequestCode)
-            else AvaApp.Counter.setPedometer <| PedometerAndroid() // We got permission!
+            AvaApp.Counter.setPedometer <| PedometerAndroid() // Update the pedometer regardless of allowed or not
