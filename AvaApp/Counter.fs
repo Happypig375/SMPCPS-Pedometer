@@ -97,7 +97,7 @@ module Counter =
         | About ->
             { state with page = Menu AboutUs }
         | PrivacyPolicy ->
-            Microsoft.Maui.ApplicationModel.Browser.OpenAsync "https://www.ictinpe.org/pp-diyapp" |> ignore
+            Microsoft.Maui.ApplicationModel.Browser.OpenAsync "https://www.ictinpe.org/privacy-policy-simplediyapp" |> ignore
             state
         | ContactUs ->
             Microsoft.Maui.ApplicationModel.Browser.OpenAsync "https://www.ictinpe.org/contact-us" |> ignore
