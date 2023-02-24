@@ -4,7 +4,6 @@
     <TargetFramework>net6.0-ios</TargetFramework>
     <SupportedOSPlatformVersion>10.0</SupportedOSPlatformVersion>
     <ProvisioningType>manual</ProvisioningType>
-    <Nullable>enable</Nullable>
     <RuntimeIdentifier>iossimulator-x64</RuntimeIdentifier>
 	<UseMauiEssentials>true</UseMauiEssentials>
     

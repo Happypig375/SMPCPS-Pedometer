@@ -25,7 +25,7 @@ type PedometerAndroid() =
         member _.IsSupported = sensor <> null
         member _.Step = event.Publish |> Event.map (fun steps -> steps, None)
 
-[<Application(Label = "SMPCPS Pedometer", Icon = "@drawable/Icon")>]
+[<Application(Icon = "@drawable/Icon")>]
 // Not Android.Hardware.Sensor.StringTypeStepCounter!
 // Available features: https://developer.android.com/guide/topics/manifest/uses-feature-element#features-reference
 [<UsesFeature("android.hardware.sensor.stepcounter", Required = true)>]

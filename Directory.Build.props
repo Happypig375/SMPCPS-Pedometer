@@ -1,5 +1,10 @@
 <Project>
   <PropertyGroup>
-    <AvaloniaVersion>11.0.0-preview5</AvaloniaVersion>
+    <AvaloniaVersion>11.0.999-cibuild0030125-beta</AvaloniaVersion>
+	  
+	<ApplicationId>smpcps.pedometer.community</ApplicationId>
+	<ApplicationName>SMPCPS Pedometer</ApplicationName>
+	<ApplicationVersion>4</ApplicationVersion>
+	<ApplicationDisplayVersion>1.0</ApplicationDisplayVersion>
   </PropertyGroup>
 </Project>
